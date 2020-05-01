@@ -235,7 +235,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
                 userList.setListData(userArr);//готовый список пользователей
                 break;
             default:
-                throw new RuntimeException("Unknown message type: " + value);//
+                throw new RuntimeException("Unknown message type:  " + value);//
         }
     }
 }
