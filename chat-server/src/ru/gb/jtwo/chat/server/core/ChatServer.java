@@ -46,7 +46,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     @Override
     public void onServerStarted(ServerSocketThread thread) {
         putLog("Server thread started");
-        SqlClient.connect();
+        SqlClient.connect();//Соединение с БД
     }
 
     @Override
@@ -76,7 +76,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     public void onServerStop(ServerSocketThread thread) {
         putLog("Server thread stopped");
         dropAllClients();//отключаем всех клиентов
-        SqlClient.disconnect();//отключаем БД
+        SqlClient.disconnect();//Отключение от БД
     }
 
     /**
@@ -127,6 +127,10 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
             case Library.TYPE_BCAST_CLIENT://клиент попросил сервер отправить широковещательное сообщение
                 sendToAllAuthorizedClients(Library.getTypeBroadcast(
                         client.getNickname(), arr[1]));//посылает всем клиентам широковещательное сообщение
+                break;
+            case Library.NEW_NICKNAME:
+                SqlClient.nicknameChange(client.getName(),msg);
+
                 break;
             default:
                 client.sendMessage(Library.getMsgFormatError(msg));//сообщение сервера клиенту что сообщение не понято

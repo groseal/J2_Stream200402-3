@@ -32,6 +32,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     private final JButton btnLogin = new JButton("Login");
 
     private final JPanel panelBottom = new JPanel(new BorderLayout());
+    private final JButton btnNewNickname = new JButton("<html>New nickname</html>");
     private final JButton btnDisconnect = new JButton("<html><b>Disconnect</b></html>");
     private final JTextField tfMessage = new JTextField();
     private final JButton btnSend = new JButton("Send");
@@ -80,7 +81,8 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         panelTop.add(tfLogin);
         panelTop.add(tfPassword);
         panelTop.add(btnLogin);
-        panelBottom.add(btnDisconnect, BorderLayout.WEST);
+        panelBottom.add(btnNewNickname, BorderLayout.LINE_START);
+        panelBottom.add(btnDisconnect, BorderLayout.AFTER_LAST_LINE);
         panelBottom.add(tfMessage, BorderLayout.CENTER);
         panelBottom.add(btnSend, BorderLayout.EAST);
         panelBottom.setVisible(false);
@@ -103,6 +105,13 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             connect();
         } else if (src == btnDisconnect) {
             socketThread.close();
+        } else if (src == btnNewNickname) {
+            String msg = tfMessage.getText();
+            String username = tfLogin.getText();
+            if ("".equals(msg)) return;
+            tfMessage.setText(null);
+            tfMessage.requestFocusInWindow();
+            socketThread.sendMessage(Library.getNewNickname(msg));
         } else {
             throw new RuntimeException("Unknown source:" + src);
         }
@@ -112,6 +121,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         try {
             Socket socket = new Socket(tfIPAddress.getText(), Integer.parseInt(tfPort.getText()));
             socketThread = new SocketThread(this, "Client", socket);
+
         } catch (IOException e) {
             showException(Thread.currentThread(), e);
         }
@@ -124,12 +134,13 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         tfMessage.setText(null);
         tfMessage.requestFocusInWindow();
         socketThread.sendMessage(Library.getTypeBcastClient(msg));
-        //putLog(String.format("%s: %s", username, msg));
-        //wrtMsgToLogFile(msg, username);
+//        putLog(String.format("%s: %s", username, msg));
+//        wrtMsgToLogFile(msg, username);
     }
 
     private void wrtMsgToLogFile(String msg, String username) {
-        try (FileWriter out = new FileWriter("log.txt", true)) {
+        String fileName = "history_" + username + ".txt";
+        try (FileWriter out = new FileWriter(fileName, true)) {
             out.write(username + ": " + msg + System.lineSeparator());
             out.flush();
         } catch (IOException e) {
@@ -172,7 +183,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
 
     /**
      * Socket Thread Listener methods
-     * */
+     */
 
     @Override
     public void onSocketStart(SocketThread thread, Socket socket) {
@@ -234,6 +245,8 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
                 Arrays.sort(userArr);//Отсортировали полученный массив пользователей
                 userList.setListData(userArr);//готовый список пользователей
                 break;
+            case Library.NEW_NICKNAME:
+
             default:
                 throw new RuntimeException("Unknown message type:  " + value);//
         }
